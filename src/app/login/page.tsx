@@ -9,12 +9,26 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
-  const [redirectUrl, setRedirectUrl] = useState('/')
 
   useEffect(() => {
-    // Set redirect URL on client side
-    setRedirectUrl(`${window.location.origin}/`)
-  }, [])
+    // Check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/')
+      }
+    }
+    checkUser()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.push('/')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router, supabase])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -33,7 +47,7 @@ export default function LoginPage() {
             appearance={{ theme: ThemeSupa }}
             theme="light"
             providers={[]}
-            redirectTo={redirectUrl}
+            redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/`}
           />
         </div>
       </div>
