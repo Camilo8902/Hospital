@@ -20,16 +20,41 @@ export default function Home() {
 
     const getUserProfile = async () => {
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('users')
           .select('*')
           .eq('auth_id', session.user.id)
           .single()
 
-        setUser(profile)
+        if (error) {
+          console.error('Error fetching user profile:', error)
+          // If user profile doesn't exist, create it
+          if (error.code === 'PGRST116') { // No rows returned
+            const { data: newProfile, error: insertError } = await supabase
+              .from('users')
+              .insert({
+                auth_id: session.user.id,
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+                email: session.user.email || '',
+                role: 'nurse' // Default role
+              })
+              .select()
+              .single()
+
+            if (insertError) {
+              console.error('Error creating user profile:', insertError)
+              setUser({ name: 'User', role: 'user' })
+            } else {
+              setUser(newProfile)
+            }
+          } else {
+            setUser({ name: 'User', role: 'user' })
+          }
+        } else {
+          setUser(profile)
+        }
       } catch (error) {
-        console.error('Error fetching user profile:', error)
-        // Fallback for build time
+        console.error('Error in getUserProfile:', error)
         setUser({ name: 'User', role: 'user' })
       }
     }
