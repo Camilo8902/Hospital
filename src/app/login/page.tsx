@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Auth } from '@supabase/auth-ui-react'
@@ -9,6 +9,12 @@ import { ThemeSupa } from '@supabase/auth-ui-shared'
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [redirectUrl, setRedirectUrl] = useState('/')
+
+  useEffect(() => {
+    // Set redirect URL on client side
+    setRedirectUrl(`${window.location.origin}/`)
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -27,7 +33,7 @@ export default function LoginPage() {
             appearance={{ theme: ThemeSupa }}
             theme="light"
             providers={[]}
-            redirectTo={`${window.location.origin}/`}
+            redirectTo={redirectUrl}
           />
         </div>
       </div>
