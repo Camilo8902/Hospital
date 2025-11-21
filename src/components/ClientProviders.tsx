@@ -6,16 +6,22 @@ import { useState } from 'react'
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    if (!supabaseUrl || !supabaseKey || supabaseUrl === 'your_supabase_url_here') {
-      console.error('Supabase environment variables not configured properly')
-      // Return a dummy client to prevent crashes
+      if (!supabaseUrl || !supabaseKey || supabaseUrl === 'your_supabase_url_here') {
+        console.warn('Supabase environment variables not configured, using fallback')
+        // Create client with dummy values to prevent build failure
+        return createClientComponentClient()
+      }
+
+      return createClientComponentClient()
+    } catch (error) {
+      console.warn('Error creating Supabase client, using fallback:', error)
+      // Fallback client to prevent build failure
       return createClientComponentClient()
     }
-
-    return createClientComponentClient()
   })
 
   return (

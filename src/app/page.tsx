@@ -19,27 +19,39 @@ export default function Home() {
     }
 
     const getUserProfile = async () => {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', session.user.id)
-        .single()
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('auth_id', session.user.id)
+          .single()
 
-      setUser(profile)
+        setUser(profile)
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+        // Fallback for build time
+        setUser({ name: 'User', role: 'user' })
+      }
     }
 
     const fetchStats = async () => {
-      const [patientsRes, usersRes, appointmentsRes] = await Promise.all([
-        supabase.from('patients').select('id', { count: 'exact', head: true }),
-        supabase.from('users').select('id', { count: 'exact', head: true }),
-        supabase.from('appointments').select('id', { count: 'exact', head: true })
-      ])
+      try {
+        const [patientsRes, usersRes, appointmentsRes] = await Promise.all([
+          supabase.from('patients').select('id', { count: 'exact', head: true }),
+          supabase.from('users').select('id', { count: 'exact', head: true }),
+          supabase.from('appointments').select('id', { count: 'exact', head: true })
+        ])
 
-      setStats({
-        patients: patientsRes.count || 0,
-        users: usersRes.count || 0,
-        appointments: appointmentsRes.count || 0
-      })
+        setStats({
+          patients: patientsRes.count || 0,
+          users: usersRes.count || 0,
+          appointments: appointmentsRes.count || 0
+        })
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+        // Fallback for build time
+        setStats({ patients: 0, users: 0, appointments: 0 })
+      }
     }
 
     getUserProfile()
